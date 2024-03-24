@@ -5,7 +5,7 @@ import { CreatePostInput, UpdatePostInput } from '../inputs/post_input.js'
 import CurrentUser from '../decorators/ctx_user.js'
 import User from '#models/user'
 import { PostGuard } from '../decorators/post_guard.js'
-import { HttpContext } from '@adonisjs/core/http'
+import GetDataloader, { DataloderService } from '../../provider/graphql/dataloader.js'
 
 class PostService {
   async getAll() {
@@ -40,7 +40,11 @@ export default class PostResolver {
 
   @Authorized()
   @Mutation(() => String)
-  async createPost(@CurrentUser() user: User, @Arg('data') post: CreatePostInput) {
+  async createPost(
+    @CurrentUser() user: User,
+    @Arg('data')
+    post: CreatePostInput
+  ) {
     await this.postService.createPost(user, post)
     return 'ok'
   }
@@ -53,8 +57,19 @@ export default class PostResolver {
     return 'ok'
   }
 
+  // N + 1 problem query
   @FieldResolver()
   async author(@Root() post: Post) {
     return await User.findBy('id', post.userId)
+  }
+
+  // N + 1 solved by dataloader
+  @FieldResolver(() => User)
+  async author2(@Root() post: Post, @GetDataloader('authors') loader: DataloderService) {
+    const batchFn = async (keys: number[]) => {
+      const users = await User.query().whereIn('id', keys)
+      return keys.map((key) => users.filter((p) => p.id === key)).flat()
+    }
+    return await loader.getDataloder(batchFn).load(post.userId)
   }
 }

@@ -2,14 +2,14 @@ import { ApplicationService } from '@adonisjs/core/types'
 
 import ApolloAdonis from './apollo_adonis.js'
 import { HttpContext } from '@adonisjs/core/http'
+import { DataloderService } from './dataloader.js'
 
 export default class ApolloProvider {
   constructor(protected app: ApplicationService) {}
 
   register() {
-    //const config = this.app.config.apollo;
     this.app.container.singleton('apollo', () => {
-      return new ApolloAdonis(this.app.container)
+      return new ApolloAdonis(this.app)
     })
   }
 
@@ -33,5 +33,11 @@ export default class ApolloProvider {
 declare module '@adonisjs/core/types' {
   interface ContainerBindings {
     apollo: ApolloAdonis
+  }
+}
+
+declare module '@adonisjs/core/http' {
+  export interface HttpContext {
+    dataloader: Record<string, DataloderService> | null
   }
 }

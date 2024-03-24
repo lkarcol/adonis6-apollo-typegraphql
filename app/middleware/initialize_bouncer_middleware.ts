@@ -15,12 +15,12 @@ export default class InitializeBouncerMiddleware {
      * Create bouncer instance for the ongoing HTTP request.
      * We will pull the user from the HTTP context.
      */
-
-    const u = await ctx.auth.use('web').authenticate()
+    await ctx.auth.use('web').check()
+    const user = ctx.auth.use('web').user
 
     ctx.bouncer = new Bouncer(
       () => {
-        return u || null
+        return user || null
       },
       abilities,
       policies

@@ -6,9 +6,7 @@ type Method = 'edit' | 'delete' | 'create'
 
 export function PostGuard(method: Method) {
   return createMethodDecorator<HttpContext>(async ({ args, context }, next) => {
-    const { bouncer, auth, response, session } = context
-
-    await auth.use('web').authenticate()
+    const { bouncer } = context
 
     const post = await Post.findBy('id', args.data.id)
 
